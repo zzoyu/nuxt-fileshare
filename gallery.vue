@@ -3,6 +3,7 @@ const files = ref([]);
 const filesNumber = ref(0);
 const page = ref(1);
 const limit = ref(0);
+
 await $fetch("/api/files").then((response) => {
   files.value = response.files;
   filesNumber.value = response.total;
@@ -20,13 +21,13 @@ const download = (file) => {
 
 const loadMore = () => {
   page.value++;
-  $fetch(`/api/files?page=${page.value}&limit=${limit.value}`).then(
-    (response) => {
+  $fetch(`/api/files?page=${page.value}&limit=${limit.value}`)
+    .then(async (response) => {
       files.value = [...files.value, ...response.files];
       filesNumber.value = response.total;
       limit.value = response.limit;
-    }
-  );
+    })
+    .finally(() => {});
 };
 
 console.log(files.value);
@@ -40,7 +41,7 @@ console.log(files.value);
     >
     <ul v-if="filesNumber">
       <li
-        v-for="(file, index) in files"
+        v-for="file in files"
         @click="download(file)"
         :key="file"
         :datatype="file"
@@ -49,7 +50,9 @@ console.log(files.value);
       </li>
     </ul>
     <div v-else>파일이 존재하지 않습니다.</div>
-    <button @click="loadMore()">더 보기</button>
+    <button v-if="filesNumber > files.length" @click="loadMore()">
+      더 보기
+    </button>
   </div>
 </template>
 
@@ -81,6 +84,7 @@ li {
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   padding: 0.2rem;
+  overflow: hidden;
 }
 li:hover {
   transform: scale(1.05);
@@ -132,6 +136,13 @@ li.visited {
   -o-user-select: none;
   user-select: none;
 }
+
+li > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 li.visited > p {
   opacity: 0.3;
 }
